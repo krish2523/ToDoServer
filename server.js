@@ -1,59 +1,42 @@
-const http = require("http");// protocol
-const port= 8081;// port 
-const toDoList = ["hey","hope u ","are","happy"]//array
-// creating a server
-http.createServer((req,res)=>{
-    const {method,url} = req;
-    //console.log(method,url);
-    if(url == "/todos"){
-        if(method == "GET"){
-        console.log("todos route")
-        res.writeHead(200,{"Content-Type":"text/html"});
-        res.write(toDoList.toString()) 
-    }else if(method == "POST"){
-            let body = "";
-            req.on('error',(err)=>{
-                console.log(err);
-            }).on('data',(chunk)=>{
-                body +=chunk;
-                console.log("chunk:",chunk);
-            }).on('end',()=>{
-                body = JSON.parse(body);
-                console.log("data:",body);
-                let newToDo = toDoList;
-                newToDo.push(body.item);
-            })
-    }else if(method == "PUT"){
+const express = require("express");
+// initialisation
+const app=express();
+app.use(express.json());
+const port = 8081;
 
-    }else if(method == "DELETE"){
-        let body = "";
-            req.on('error',(err)=>{
-                console.log(err)
-            }).on('data',(chunk)=>{
-                body +=chunk;
-                console.log("chunk:",chunk);
-            }).on('end',()=>{
-                body = JSON.parse(body);
-                let deleteThis = body.item;
-                // for(let i=0;i<toDoList.length;i++){
-                //     if(toDoList[i] === deleteThis){
-                //         toDoList.splice(i,1);
-                //         break;
-                //     }
-                // }
-                toDoList.find((elem, index)=>{
-                    if(elem=== deleteThis){
-                        toDoList.splice(index,1);
-                    }
-                })
-            })  
-        }
-}
-    else if(url == "/"){
-        console.log("/ home default route")
-    }
-    res.end();
+const toDoList = ["hey","hope u ","are","happy"];
+app.get("/todos",(req,res)=>{
+    res.status(200).send(toDoList)
 })
-.listen(port,()=>{
-    console.log(`NodeJs server started on port ${port}`);
+app.post("/todos",(req,res)=>{
+    let newDoItem = req.body.item;
+    toDoList.push(newDoItem);
+    res.status(201).send({
+        message:"The task was added sucessfully "
+    })
+})
+app.delete("/todos",(req,res)=>{
+var itemToDelete = req.body.item;
+toDoList.find((elem,index)=>{
+    if(elem===itemToDelete){
+        toDoList.splice(index,1);
+    }
+    
+    });
+    res.status(204).send({
+        message:"The task was deleted sucessfully "
+    })
+})
+app.all("/todos",(req,res)=>{
+    res.status(501).send({
+        message:"The method is not implemented "
+    })
+})
+app.all("*",(req,res)=>{
+    res.status(404).send({
+        message:"The requested resource was not found "
+})
+})
+app.listen(port,()=>{
+    console.log(`NodeJs with express started running on port ${port}`);
 })
